@@ -1,2 +1,0 @@
-attempt_id,strategy_name,timeframes_used,indicators_used,entry_long,entry_short,exit_long,exit_short,total_trades,win_rate_pct,trades_per_year,total_pnl,highest_mdd,sharpe_ratio,pass_fail,fail_reason
-001,MtfTrendAlign,5m+15m,EMA(9/21)+EMA(20),5m ema_fast>slow & 15m up,5m ema_fast<slow & 15m down,opposite align/disagree,opposite align/disagree,68,57.35,680,72543.25,-12203.75,7.88,PASS,positive PnL
