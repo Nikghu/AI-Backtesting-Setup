@@ -119,10 +119,41 @@ The `/ai-backtest` skill (`.claude/skills/ai-backtest/SKILL.md`) runs a
 generate → backtest → evaluate loop until your criteria pass. Research helpers
 live in `ai_engine/tools/` (see its `README.md`).
 
+### Worked example session
+
+A complete session produced by this loop is included under
+[`ai_engine/sessions/new_supertrend_nifty/`](ai_engine/sessions/new_supertrend_nifty)
+so you can see exactly what a run looks like:
+
+```
+new_supertrend_nifty/
+├── attempts/001_SupertrendMtf.py   # the generated strategy
+├── passed/001_SupertrendMtf.py     # + signals_*.csv (trades) + signals_*.html (report)
+├── attempts_log.csv                # one row per attempt with metrics
+└── INSIGHTS.md                     # the lesson learned (and caveats)
+```
+
+**`SupertrendMtf`** — Supertrend trend-following with a higher-timeframe filter:
+go long when the 5m and 15m Supertrend both point up, short when both point
+down, and stay flat when they disagree (which filters out chop).
+
+Reproduce it on the bundled sample:
+
+```
+python -m ai_engine.run_backtest \
+    --strategy-file ai_engine/sessions/new_supertrend_nifty/passed/001_SupertrendMtf.py \
+    --symbols NIFTY --report --outdir output
+```
+
+> Note: the bundled sample is only ~1 month of data, so the absolute numbers in
+> this example are inflated by the short window — it demonstrates the workflow,
+> not a validated edge. Re-run on a longer dataset before trusting the figures.
+
 ## Project layout
 
 ```
 ai_engine/            headless runner (run_backtest.py), tools, templates
+  sessions/           /ai-backtest output (incl. the worked example)
 mt_quant_system/      core engine, GUI, strategies
   core/               data loader, signal generator, exporter, report generator
   strategies/         your strategies (+ template & demos)
