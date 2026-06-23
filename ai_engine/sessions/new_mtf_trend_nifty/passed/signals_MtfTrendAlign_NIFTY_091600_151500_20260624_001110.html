@@ -1,0 +1,1934 @@
+
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <title>Backtest Report - Future</title>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        
+    <style>
+        :root {
+            --bg-color: #0d1117; 
+            --sidebar-bg: #010409;
+            --container-bg: #0d1117;
+            --card-bg: #161b22;
+            --card-hover: #1f2428;
+            --border-color: #30363d;
+            --text-primary: #e6edf3; 
+            --text-secondary: #8b949e;
+            --accent-primary: #2f81f7;
+            --accent-pos: #3fb950;
+            --accent-neg: #f85149;
+            --nav-hover: #21262d;
+            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+        }
+
+        body, html {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            font-family: var(--font-family);
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            overflow: hidden; 
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Layout Container */
+        .app-container {
+            display: flex;
+            height: 100vh;
+            width: 100%;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background-color: rgba(31, 111, 235, 0.08); /* Transparent Blue */
+            border: 1px solid rgba(56, 139, 253, 0.15);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            margin: 12px; /* Gap around the panel */
+            border-radius: 16px; /* Round edges */
+            height: calc(100vh - 24px); /* Adjust height for margins */
+            backdrop-filter: blur(10px);
+        }
+
+        .sidebar-header {
+            padding: 24px;
+            border-bottom: 1px solid rgba(56, 139, 253, 0.1);
+            background: transparent;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-logo {
+            width: 38px; 
+            height: 38px;
+            color: #58a6ff;
+            background: rgba(88, 166, 255, 0.15);
+            padding: 8px;
+            border-radius: 8px;
+            flex-shrink: 0;
+        }
+
+        .sidebar-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, #58a6ff, #a5d6ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 0;
+            letter-spacing: -0.5px;
+        }
+
+        .sidebar-subtitle {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: 6px;
+            font-weight: 500;
+        }
+
+        .nav-links {
+            list-style: none;
+            padding: 16px 12px;
+            margin: 0;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .nav-item {
+            padding: 10px 16px;
+            margin-bottom: 4px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+        }
+
+        .nav-icon {
+            margin-right: 12px;
+            opacity: 0.7;
+        }
+        .nav-item:hover .nav-icon, .nav-item.active .nav-icon {
+            opacity: 1;
+        }
+
+        .nav-item:hover {
+            background-color: var(--nav-hover);
+            color: var(--text-primary);
+        }
+
+        .nav-item.active {
+            background-color: #1f6feb;
+            color: #ffffff;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(31, 111, 235, 0.2);
+        }
+        
+        .nav-footer {
+            padding: 24px;
+            font-size: 0.75rem;
+            color: #8b949e;
+            border-top: 1px solid rgba(56, 139, 253, 0.1);
+            text-align: center;
+            background-color: transparent;
+        }
+
+        /* Content Area */
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 30px 40px;
+            background-color: var(--bg-color);
+        }
+
+        /* Header in Content */
+        .report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 30px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 20px;
+        }
+
+        .page-title h2 {
+            margin: 0;
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, #58a6ff, #a5d6ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+            transition: all 0.3s ease;
+        }
+
+        .header-meta {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        
+        .meta-tag {
+            display: flex;
+            align-items: center;
+            background-color: rgba(56, 139, 253, 0.1);
+            border: 1px solid rgba(56, 139, 253, 0.2);
+            border-radius: 6px;
+            padding: 6px 14px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+        
+        .meta-tag strong {
+            color: var(--text-primary);
+            margin-left: 6px;
+            font-weight: 600;
+        }
+
+        /* Tabs Logic */
+        .tab-content { display: none; animation: fadeIn 0.3s ease; }
+        .tab-content.active { display: block; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Metrics & Cards (Reused) */
+        .section-header {
+            margin-bottom: 20px;
+            margin-top: 10px;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        /* Chart Container */
+        .chart-wrapper {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 30px;
+            height: 400px;
+            position: relative;
+        }
+
+        /* Periodic Matrix Tables */
+        .matrix-table-container {
+            margin-top: 30px;
+            overflow-x: auto;
+        }
+        .matrix-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+        .matrix-table th, .matrix-table td {
+            text-align: center;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+        }
+        .matrix-table th {
+            background-color: var(--card-bg);
+            font-weight: 600;
+        }
+        .matrix-table .year-col {
+            text-align: left;
+            font-weight: 600;
+            background-color: var(--card-bg);
+            position: sticky; 
+            left: 0;
+        }
+        .cell-pos { background-color: rgba(63, 185, 80, 0.15); color: #3fb950; }
+        .cell-neg { background-color: rgba(248, 81, 73, 0.15); color: #f85149; }
+        .cell-neu { color: var(--text-secondary); }
+        .matrix-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .section-header-flex {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .view-toggle {
+            display: flex;
+            background: #21262d;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 2px;
+        }
+        
+        .view-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            padding: 4px 12px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+        
+        .view-btn.active {
+            background: #1f6feb;
+            color: #fff;
+        }
+
+        .view-content { display: none; }
+        .view-content.active { display: block; }
+        
+        .breakdown-chart-wrapper {
+            height: 350px;
+            width: 100%;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .metric-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            text-align: center;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .metric-card:hover {
+            transform: translateY(-4px);
+            border-color: #8b949e;
+            box-shadow: 0 12px 24px rgba(0,0,0,0.2);
+            background-color: #1c2128;
+        }
+
+        .metric-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+
+        .metric-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -0.5px;
+        }
+        
+        /* KPI Cards */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 24px;
+            margin-bottom: 48px;
+        }
+        
+        .kpi-card {
+            background: #161b22;
+            border: 1px solid var(--border-color);
+            position: relative;
+            padding: 32px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            overflow: hidden;
+            transition: transform 0.2s;
+        }
+        .kpi-card:hover { transform: translateY(-2px); }
+        .kpi-card::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 4px;
+            background: var(--accent-primary); 
+        }
+        
+        .kpi-card .metric-label { font-size: 0.85rem; margin-bottom: 16px;}
+        .kpi-card .metric-value { font-size: 2.8rem; line-height: 1.1; }
+
+        /* Typography Colors */
+        .text-pos { color: var(--accent-pos) !important; }
+        .text-neg { color: var(--accent-neg) !important; }
+
+        /* Table */
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--card-bg);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+            white-space: nowrap;
+        }
+
+        th, td {
+            padding: 16px 20px;
+            text-align: right;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background: #1c2128;
+            color: var(--text-secondary);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        th:first-child, td:first-child { text-align: left; }
+        th:nth-child(2), td:nth-child(2) { text-align: center; } 
+        tr:hover { background-color: var(--card-hover); }
+
+        .badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        .badge-long { background: rgba(56, 139, 253, 0.15); color: #58a6ff; border: 1px solid rgba(56, 139, 253, 0.3); }
+        .badge-short { background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #30363d; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #58a6ff; }
+    </style>
+    
+    </head>
+    <body>
+        <div class="app-container">
+            <!-- LEFT PANEL: Sidebar -->
+            <nav class="sidebar">
+                <div class="sidebar-header">
+                    <svg class="brand-logo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                    </svg>
+                    <div>
+                        <div class="sidebar-title">Indexmisbn Analytics</div>
+                        <div class="sidebar-subtitle">Backtest Strategy Report</div>
+                    </div>
+                </div>
+                <ul class="nav-links">
+                    <li class="nav-item active" onclick="showTab('dashboard', this)">
+                        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                        Performance
+                    </li>
+                    <li class="nav-item" onclick="showTab('risk', this)">
+                        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                        Risk Analysis
+                    </li>
+                    <li class="nav-item" onclick="showTab('log', this)">
+                         <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                        Trade Log
+                    </li>
+                </ul>
+                <div class="nav-footer">
+                   Generated: 2026-06-24 00:11:10
+                </div>
+            </nav>
+
+            <!-- RIGHT PANEL: Content -->
+            <main class="content-area">
+                
+                <!-- Common Header for Context -->
+                <div class="report-header">
+                    <div class="page-title">
+                        <h2 id="page-title">Performance</h2>
+                    </div>
+                    <div class="header-meta">
+                        <div class="meta-tag">
+                            Instrument: <strong>Future</strong>
+                        </div>
+                        <div class="meta-tag">
+                            Initial Capital: <strong>100000.0</strong>
+                        </div>
+                        <div class="meta-tag">
+                            Lot Size: <strong>65</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab: Performance Overview (Dashboard) -->
+                <div id="dashboard" class="tab-content active">
+                     <div class="dashboard-grid">
+                <div class="metric-card" style="">
+                    <div class="metric-label">Overall Profit and Loss</div>
+                    <div class="metric-value text-pos">₹ 72,543.25</div>
+                </div>
+                
+                <div class="metric-card" style="">
+                    <div class="metric-label">Avg Day PNL</div>
+                    <div class="metric-value text-pos">₹ 3,627.16</div>
+                </div>
+                
+                <div class="metric-card" style="">
+                    <div class="metric-label">Avg Portfolio PNL</div>
+                    <div class="metric-value text-pos">₹ 1,066.81</div>
+                </div>
+                
+                <div class="metric-card" style="">
+                    <div class="metric-label">Max Profit</div>
+                    <div class="metric-value text-pos">₹ 24,375.00 <span style="font-size: 0.75rem; color: #58a6ff; font-weight: normal; display: block; margin-top: 4px;">(29-May-26)</span></div>
+                </div>
+                
+                <div class="metric-card" style="">
+                    <div class="metric-label">Max Loss</div>
+                    <div class="metric-value text-neg">-₹ 5,375.50 <span style="font-size: 0.75rem; color: #58a6ff; font-weight: normal; display: block; margin-top: 4px;">(04-Jun-26)</span></div>
+                </div>
+                
+                <div class="metric-card" style="">
+                    <div class="metric-label">Total Days</div>
+                    <div class="metric-value ">20</div>
+                </div>
+                
+                <div class="metric-card" style="">
+                    <div class="metric-label">Win% (Days)</div>
+                    <div class="metric-value text-pos">70.00</div>
+                </div>
+                
+                <div class="metric-card" style="">
+                    <div class="metric-label">Loss% (Days)</div>
+                    <div class="metric-value text-neg">30.00</div>
+                </div>
+                
+                <div class="metric-card" style="">
+                    <div class="metric-label">Max Winning Streak</div>
+                    <div class="metric-value text-pos">7 <span style="font-size: 0.75rem; color: #58a6ff; font-weight: normal; display: block; margin-top: 4px;">(25-May-26 to 03-Jun-26)</span></div>
+                </div>
+                
+                <div class="metric-card" style="">
+                    <div class="metric-label">Max Losing Streak</div>
+                    <div class="metric-value text-neg">3 <span style="font-size: 0.75rem; color: #58a6ff; font-weight: normal; display: block; margin-top: 4px;">(04-Jun-26 to 08-Jun-26)</span></div>
+                </div>
+                
+                <div class="metric-card" style="">
+                    <div class="metric-label">Avg Profit On Win Days</div>
+                    <div class="metric-value text-pos">₹ 6,687.80</div>
+                </div>
+                
+                <div class="metric-card" style="">
+                    <div class="metric-label">Avg Loss On Loss Days</div>
+                    <div class="metric-value text-neg">-₹ 3,514.33</div>
+                </div>
+                
+                <div class="metric-card" style="">
+                    <div class="metric-label">Reward To Risk Ratio</div>
+                    <div class="metric-value ">1.90</div>
+                </div>
+                
+                <div class="metric-card" style="">
+                    <div class="metric-label">Expectancy</div>
+                    <div class="metric-value text-pos">₹ 1,066.81</div>
+                </div>
+                
+                <div class="metric-card" style="">
+                    <div class="metric-label">Max Drawdown (Days)</div>
+                    <div class="metric-value text-neg">5 <span style="font-size: 0.75rem; color: #58a6ff; font-weight: normal; display: block; margin-top: 4px;">(04-Jun-26 to 10-Jun-26)</span></div>
+                </div>
+                </div>
+                     <div class="chart-wrapper">
+                        <canvas id="performanceChart"></canvas>
+                     </div>
+
+                     <div class="chart-wrapper">
+                        <canvas id="dailyPnLChart"></canvas>
+                     </div>
+                     
+                     
+        <div class="matrix-table-container">
+            <div class="section-header-flex">
+                <div class="matrix-title">Monthly Breakdown</div>
+                <div class="view-toggle">
+                    <button class="view-btn active" onclick="switchView('monthly', 'table', this)">Table</button>
+                    <button class="view-btn" onclick="switchView('monthly', 'bar', this)">Bar View</button>
+                </div>
+            </div>
+            
+            <div id="monthly-table" class="view-content active">
+                <table class="matrix-table">
+                    <thead><tr><th class="year-col">Year</th><th>Jan</th><th>Feb</th><th>Mar</th><th>Apr</th><th>May</th><th>Jun</th><th>Jul</th><th>Aug</th><th>Sep</th><th>Oct</th><th>Nov</th><th>Dec</th><th>Total</th></tr></thead>
+                    <tbody><tr><td class="year-col">2026</td><td class="cell-neu"><div>₹ 0.00</div></td><td class="cell-neu"><div>₹ 0.00</div></td><td class="cell-neu"><div>₹ 0.00</div></td><td class="cell-neu"><div>₹ 0.00</div></td><td class="cell-pos"><div>₹ 37339.25</div><div style="color: #f85149; font-size: 0.75rem; margin-top: 2px;">(₹ -1595.75)</div></td><td class="cell-pos"><div>₹ 35204.00</div><div style="color: #f85149; font-size: 0.75rem; margin-top: 2px;">(₹ -16773.25)</div></td><td class="cell-neu"><div>₹ 0.00</div></td><td class="cell-neu"><div>₹ 0.00</div></td><td class="cell-neu"><div>₹ 0.00</div></td><td class="cell-neu"><div>₹ 0.00</div></td><td class="cell-neu"><div>₹ 0.00</div></td><td class="cell-neu"><div>₹ 0.00</div></td><td class="cell-pos"><strong>₹ 72543.25</strong><div style="color: #f85149; font-size: 0.75rem; margin-top: 2px;">(₹ -16773.25)</div></td></tr></tbody>
+                </table>
+            </div>
+            
+            <div id="monthly-bar" class="view-content">
+                <div class="breakdown-chart-wrapper">
+                    <canvas id="monthlyChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+                     
+        <div class="matrix-table-container">
+            <div class="section-header-flex">
+                <div class="matrix-title">Weekly Breakdown</div>
+                <div class="view-toggle">
+                    <button class="view-btn active" onclick="switchView('weekly', 'table', this)">Table</button>
+                    <button class="view-btn" onclick="switchView('weekly', 'bar', this)">Bar View</button>
+                </div>
+            </div>
+            
+            <div id="weekly-table" class="view-content active">
+                <table class="matrix-table">
+                    <thead><tr><th class="year-col">Year</th><th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th><th>Total</th></tr></thead>
+                    <tbody><tr><td class="year-col">2026</td><td class="cell-pos"><div>₹ 8635.25</div><div style="color: #f85149; font-size: 0.75rem; margin-top: 2px;">(₹ -7445.75)</div></td><td class="cell-pos"><div>₹ 16107.00</div><div style="color: #f85149; font-size: 0.75rem; margin-top: 2px;">(₹ -3727.75)</div></td><td class="cell-pos"><div>₹ 23702.25</div><div style="color: #f85149; font-size: 0.75rem; margin-top: 2px;">(₹ -1602.25)</div></td><td class="cell-neg"><div>₹ -123.50</div><div style="color: #f85149; font-size: 0.75rem; margin-top: 2px;">(₹ -11596.00)</div></td><td class="cell-pos"><div>₹ 24222.25</div><div style="color: #f85149; font-size: 0.75rem; margin-top: 2px;">(₹ -10669.75)</div></td><td class="cell-pos"><strong>₹ 72543.25</strong><div style="color: #f85149; font-size: 0.75rem; margin-top: 2px;">(₹ -16773.25)</div></td></tr></tbody>
+                </table>
+            </div>
+            
+            <div id="weekly-bar" class="view-content">
+                <div class="breakdown-chart-wrapper">
+                    <canvas id="weeklyChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+                </div>
+
+                <!-- Tab: Risk Analysis -->
+                <div id="risk" class="tab-content">
+                     <div class="metrics-grid">
+                <div class="metric-card" style="">
+                    <div class="metric-label">Winning Trades</div>
+                    <div class="metric-value text-pos">39</div>
+                </div>
+                
+                <div class="metric-card" style="">
+                    <div class="metric-label">Losing Trades</div>
+                    <div class="metric-value ">29</div>
+                </div>
+                
+                <div class="metric-card" style="">
+                    <div class="metric-label">Avg Duration (min)</div>
+                    <div class="metric-value ">83.75</div>
+                </div>
+                
+                <div class="metric-card" style="">
+                    <div class="metric-label">Win Rate (%)</div>
+                    <div class="metric-value text-pos">57.35</div>
+                </div>
+                
+                <div class="metric-card" style="">
+                    <div class="metric-label">Total Trades</div>
+                    <div class="metric-value ">68</div>
+                </div>
+                
+                <div class="metric-card" style="">
+                    <div class="metric-label">Current MDD</div>
+                    <div class="metric-value text-neg">-₹ 5,414.50</div>
+                </div>
+                
+                <div class="metric-card" style="">
+                    <div class="metric-label">Avg Drawdown</div>
+                    <div class="metric-value text-neg">-₹ 2,698.31</div>
+                </div>
+                
+                <div class="metric-card" style="">
+                    <div class="metric-label">Peak Equity</div>
+                    <div class="metric-value ">₹ 77,957.75</div>
+                </div>
+                
+                <div class="metric-card" style="">
+                    <div class="metric-label">Trough Equity</div>
+                    <div class="metric-value ">1959.75</div>
+                </div>
+                
+                <div class="metric-card" style="">
+                    <div class="metric-label">Standard Deviation (Daily)</div>
+                    <div class="metric-value ">₹ 7,305.88</div>
+                </div>
+                
+                <div class="metric-card" style="">
+                    <div class="metric-label">Sortino Ratio</div>
+                    <div class="metric-value text-pos">28.18</div>
+                </div>
+                
+                <div class="metric-card" style="">
+                    <div class="metric-label">Calmar Ratio</div>
+                    <div class="metric-value ">74.90</div>
+                </div>
+                
+                <div class="metric-card" style="">
+                    <div class="metric-label">Sterling Ratio</div>
+                    <div class="metric-value ">338.75</div>
+                </div>
+                
+                <div class="metric-card" style="">
+                    <div class="metric-label">Omega Ratio</div>
+                    <div class="metric-value ">4.44</div>
+                </div>
+                
+                <div class="metric-card" style="">
+                    <div class="metric-label">VAR 95%</div>
+                    <div class="metric-value ">-₹ 4,529.53</div>
+                </div>
+                
+                <div class="metric-card" style="">
+                    <div class="metric-label">VAR 99%</div>
+                    <div class="metric-value ">-₹ 5,206.31</div>
+                </div>
+                
+                <div class="metric-card" style="">
+                    <div class="metric-label">CVaR (Expected Tail)</div>
+                    <div class="metric-value ">-₹ 5,375.50</div>
+                </div>
+                </div>
+                     
+                     
+                </div>
+
+                <!-- Tab: Trade Log -->
+                <div id="log" class="tab-content">
+                    <div class="chart-wrapper" style="height: 300px; margin-bottom: 20px;">
+                        <canvas id="tradeCountChart"></canvas>
+                    </div>
+                    
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th class="text-left">Trade #</th>
+                    <th class="text-center">Type</th>
+                    <th>Entry Time</th>
+                    <th>Exit Time</th>
+                    <th>Entry Price</th>
+                    <th>Exit Price</th>
+                    <th>PnL</th>
+                    <th>PnL %</th>
+                    <th>Qty</th>
+                    <th>Duration (Hrs)</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+        <tr>
+            <td class="text-left">1</td>
+            <td><span class="badge badge-short">SHORT</span></td>
+            <td>2026-05-25 12:25:00</td>
+            <td>2026-05-25 13:15:00</td>
+            <td>23963.40</td>
+            <td>23979.10</td>
+            <td class="text-neg">-1020.50</td>
+            <td class="text-neg">-0.07%</td>
+            <td>65</td>
+            <td>0.83</td>
+        </tr>
+        
+        <tr>
+            <td class="text-left">2</td>
+            <td><span class="badge badge-short">SHORT</span></td>
+            <td>2026-05-25 14:15:00</td>
+            <td>2026-05-25 14:20:00</td>
+            <td>23959.95</td>
+            <td>23960.65</td>
+            <td class="text-neg">-45.50</td>
+            <td class="">-0.00%</td>
+            <td>65</td>
+            <td>0.08</td>
+        </tr>
+        
+        <tr>
+            <td class="text-left">3</td>
+            <td><span class="badge badge-long">LONG</span></td>
+            <td>2026-05-25 14:35:00</td>
+            <td>2026-05-25 15:15:00</td>
+            <td>23989.30</td>
+            <td>24035.85</td>
+            <td class="text-pos">3025.75</td>
+            <td class="text-pos">0.19%</td>
+            <td>65</td>
+            <td>0.67</td>
+        </tr>
+        
+        <tr>
+            <td class="text-left">4</td>
+            <td><span class="badge badge-long">LONG</span></td>
+            <td>2026-05-26 09:20:00</td>
+            <td>2026-05-26 12:00:00</td>
+            <td>24011.55</td>
+            <td>24040.20</td>
+            <td class="text-pos">1862.25</td>
+            <td class="text-pos">0.12%</td>
+            <td>65</td>
+            <td>2.67</td>
+        </tr>
+        
+        <tr>
+            <td class="text-left">5</td>
+            <td><span class="badge badge-short">SHORT</span></td>
+            <td>2026-05-26 12:05:00</td>
+            <td>2026-05-26 15:15:00</td>
+            <td>24037.15</td>
+            <td>23907.70</td>
+            <td class="text-pos">8414.25</td>
+            <td class="text-pos">0.54%</td>
+            <td>65</td>
+            <td>3.17</td>
+        </tr>
+        
+        <tr>
+            <td class="text-left">6</td>
+            <td><span class="badge badge-short">SHORT</span></td>
+            <td>2026-05-27 09:20:00</td>
+            <td>2026-05-27 10:20:00</td>
+            <td>23928.55</td>
+            <td>23953.10</td>
+            <td class="text-neg">-1595.75</td>
+            <td class="text-neg">-0.10%</td>
+            <td>65</td>
+            <td>1.00</td>
+        </tr>
+        
+        <tr>
+            <td class="text-left">7</td>
+            <td><span class="badge badge-long">LONG</span></td>
+            <td>2026-05-27 10:20:00</td>
+            <td>2026-05-27 10:35:00</td>
+            <td>23953.10</td>
+            <td>23959.05</td>
+            <td class="text-pos">386.75</td>
+            <td class="text-pos">0.02%</td>
+            <td>65</td>
+            <td>0.25</td>
+        </tr>
+        
+        <tr>
+            <td class="text-left">8</td>
+            <td><span class="badge badge-long">LONG</span></td>
+            <td>2026-05-27 10:50:00</td>
+            <td>2026-05-27 11:50:00</td>
+            <td>23943.20</td>
+            <td>23948.10</td>
+            <td class="text-pos">318.50</td>
+            <td class="text-pos">0.02%</td>
+            <td>65</td>
+            <td>1.00</td>
+        </tr>
+        
+        <tr>
+            <td class="text-left">9</td>
+            <td><span class="badge badge-short">SHORT</span></td>
+            <td>2026-05-27 12:05:00</td>
+            <td>2026-05-27 15:15:00</td>
+            <td>23928.50</td>
+            <td>23903.60</td>
+            <td class="text-pos">1618.50</td>
+            <td class="text-pos">0.10%</td>
+            <td>65</td>
+            <td>3.17</td>
+        </tr>
+        
+        <tr>
+            <td class="text-left">10</td>
+            <td><span class="badge badge-long">LONG</span></td>
+            <td>2026-05-29 10:05:00</td>
+            <td>2026-05-29 10:20:00</td>
+            <td>23928.20</td>
+            <td>23934.40</td>
+            <td class="text-pos">403.00</td>
+            <td class="text-pos">0.03%</td>
+            <td>65</td>
+            <td>0.25</td>
+        </tr>
+        
+        <tr>
+            <td class="text-left">11</td>
+            <td><span class="badge badge-short">SHORT</span></td>
+            <td>2026-05-29 10:50:00</td>
+            <td>2026-05-29 15:15:00</td>
+            <td>23896.00</td>
+            <td>23527.20</td>
+            <td class="text-pos">23972.00</td>
+            <td class="text-pos">1.54%</td>
+            <td>65</td>
+            <td>4.42</td>
+        </tr>
+        
+        <tr>
+            <td class="text-left">12</td>
+            <td><span class="badge badge-short">SHORT</span></td>
+            <td>2026-06-01 09:20:00</td>
+            <td>2026-06-01 11:20:00</td>
+            <td>23633.40</td>
+            <td>23607.05</td>
+            <td class="text-pos">1712.75</td>
+            <td class="text-pos">0.11%</td>
+            <td>65</td>
+            <td>2.00</td>
+        </tr>
+        
+        <tr>
+            <td class="text-left">13</td>
+            <td><span class="badge badge-short">SHORT</span></td>
+            <td>2026-06-01 11:25:00</td>
+            <td>2026-06-01 15:15:00</td>
+            <td>23580.30</td>
+            <td>23389.40</td>
+            <td class="text-pos">12408.50</td>
+            <td class="text-pos">0.81%</td>
+            <td>65</td>
+            <td>3.83</td>
+        </tr>
+        
+        <tr>
+            <td class="text-left">14</td>
+            <td><span class="badge badge-short">SHORT</span></td>
+            <td>2026-06-02 09:20:00</td>
+            <td>2026-06-02 12:35:00</td>
+            <td>23285.65</td>
+            <td>23331.25</td>
+            <td class="text-neg">-2964.00</td>
+            <td class="text-neg">-0.20%</td>
+            <td>65</td>
+            <td>3.25</td>
+        </tr>
+        
+        <tr>
+            <td class="text-left">15</td>
+            <td><span class="badge badge-long">LONG</span></td>
+            <td>2026-06-02 12:45:00</td>
+            <td>2026-06-02 15:05:00</td>
+            <td>23371.40</td>
+            <td>23464.10</td>
+            <td class="text-pos">6025.50</td>
+            <td class="text-pos">0.40%</td>
+            <td>65</td>
+            <td>2.33</td>
+        </tr>
+        
+        <tr>
+            <td class="text-left">16</td>
+            <td><span class="badge badge-long">LONG</span></td>
+            <td>2026-06-02 15:10:00</td>
+            <td>2026-06-02 15:15:00</td>
+            <td>23487.35</td>
+            <td>23490.45</td>
+            <td class="text-pos">201.50</td>
+            <td class="text-pos">0.01%</td>
+            <td>65</td>
+            <td>0.08</td>
+        </tr>
+        
+        <tr>
+            <td class="text-left">17</td>
+            <td><span class="badge badge-short">SHORT</span></td>
+            <td>2026-06-03 09:20:00</td>
+            <td>2026-06-03 12:35:00</td>
+            <td>23299.90</td>
+            <td>23290.55</td>
+            <td class="text-pos">607.75</td>
+            <td class="text-pos">0.04%</td>
+            <td>65</td>
+            <td>3.25</td>
+        </tr>
+        
+        <tr>
+            <td class="text-left">18</td>
+            <td><span class="badge badge-long">LONG</span></td>
+            <td>2026-06-03 12:40:00</td>
+            <td>2026-06-03 12:50:00</td>
+            <td>23325.80</td>
+            <td>23301.15</td>
+            <td class="text-neg">-1602.25</td>
+            <td class="text-neg">-0.11%</td>
+            <td>65</td>
+            <td>0.17</td>
+        </tr>
+        
+        <tr>
+            <td class="text-left">19</td>
+            <td><span class="badge badge-long">LONG</span></td>
+            <td>2026-06-03 13:05:00</td>
+            <td>2026-06-03 15:15:00</td>
+            <td>23293.30</td>
+            <td>23396.10</td>
+            <td class="text-pos">6682.00</td>
+            <td class="text-pos">0.44%</td>
+            <td>65</td>
+            <td>2.17</td>
+        </tr>
+        
+        <tr>
+            <td class="text-left">20</td>
+            <td><span class="badge badge-short">SHORT</span></td>
+            <td>2026-06-04 09:25:00</td>
+            <td>2026-06-04 09:35:00</td>
+            <td>23339.60</td>
+            <td>23331.50</td>
+            <td class="text-pos">526.50</td>
+            <td class="text-pos">0.03%</td>
+            <td>65</td>
+            <td>0.17</td>
+        </tr>
+        
+        <tr>
+            <td class="text-left">21</td>
+            <td><span class="badge badge-long">LONG</span></td>
+            <td>2026-06-04 10:05:00</td>
+            <td>2026-06-04 11:25:00</td>
+            <td>23421.15</td>
+            <td>23389.35</td>
+            <td class="text-neg">-2067.00</td>
+            <td class="text-neg">-0.14%</td>
+            <td>65</td>
+            <td>1.33</td>
+        </tr>
+        
+        <tr>
+            <td class="text-left">22</td>
+            <td><span class="badge badge-long">LONG</span></td>
+            <td>2026-06-04 11:40:00</td>
+            <td>2026-06-04 12:35:00</td>
+            <td>23445.65</td>
+            <td>23396.55</td>
+            <td class="text-neg">-3191.50</td>
+            <td class="text-neg">-0.21%</td>
+            <td>65</td>
+            <td>0.92</td>
+        </tr>
+        
+        <tr>
+            <td class="text-left">23</td>
+            <td><span class="badge badge-short">SHORT</span></td>
+            <td>2026-06-04 12:45:00</td>
+            <td>2026-06-04 12:50:00</td>
+            <td>23384.45</td>
+            <td>23398.45</td>
+            <td class="text-neg">-910.00</td>
+            <td class="text-neg">-0.06%</td>
+            <td>65</td>
+            <td>0.08</td>
+        </tr>
+        
+        <tr>
+            <td class="text-left">24</td>
+            <td><span class="badge badge-short">SHORT</span></td>
+            <td>2026-06-04 13:05:00</td>
+            <td>2026-06-04 14:05:00</td>
+            <td>23411.90</td>
+            <td>23410.55</td>
+            <td class="text-pos">87.75</td>
+            <td class="text-pos">0.01%</td>
+            <td>65</td>
+            <td>1.00</td>
+        </tr>
+        
+        <tr>
+            <td class="text-left">25</td>
+            <td><span class="badge badge-long">LONG</span></td>
+            <td>2026-06-04 14:15:00</td>
+            <td>2026-06-04 15:15:00</td>
+            <td>23414.30</td>
+            <td>23417.05</td>
+            <td class="text-pos">178.75</td>
+            <td class="text-pos">0.01%</td>
+            <td>65</td>
+            <td>1.00</td>
+        </tr>
+        
+        <tr>
+            <td class="text-left">26</td>
+            <td><span class="badge badge-long">LONG</span></td>
+            <td>2026-06-05 09:20:00</td>
+            <td>2026-06-05 10:35:00</td>
+            <td>23456.05</td>
+            <td>23432.00</td>
+            <td class="text-neg">-1563.25</td>
+            <td class="text-neg">-0.10%</td>
+            <td>65</td>
+            <td>1.25</td>
+        </tr>
+        
+        <tr>
+            <td class="text-left">27</td>
+            <td><span class="badge badge-short">SHORT</span></td>
+            <td>2026-06-05 10:40:00</td>
+            <td>2026-06-05 11:05:00</td>
+            <td>23364.75</td>
+            <td>23453.15</td>
+            <td class="text-neg">-5746.00</td>
+            <td class="text-neg">-0.38%</td>
+            <td>65</td>
+            <td>0.42</td>
+        </tr>
+        
+        <tr>
+            <td class="text-left">28</td>
+            <td><span class="badge badge-short">SHORT</span></td>
+            <td>2026-06-05 11:20:00</td>
+            <td>2026-06-05 11:35:00</td>
+            <td>23428.60</td>
+            <td>23422.95</td>
+            <td class="text-pos">367.25</td>
+            <td class="text-pos">0.02%</td>
+            <td>65</td>
+            <td>0.25</td>
+        </tr>
+        
+        <tr>
+            <td class="text-left">29</td>
+            <td><span class="badge badge-short">SHORT</span></td>
+            <td>2026-06-05 11:50:00</td>
+            <td>2026-06-05 12:05:00</td>
+            <td>23433.65</td>
+            <td>23429.60</td>
+            <td class="text-pos">263.25</td>
+            <td class="text-pos">0.02%</td>
+            <td>65</td>
+            <td>0.25</td>
+        </tr>
+        
+        <tr>
+            <td class="text-left">30</td>
+            <td><span class="badge badge-long">LONG</span></td>
+            <td>2026-06-05 12:20:00</td>
+            <td>2026-06-05 12:35:00</td>
+            <td>23435.70</td>
+            <td>23413.25</td>
+            <td class="text-neg">-1459.25</td>
+            <td class="text-neg">-0.10%</td>
+            <td>65</td>
+            <td>0.25</td>
+        </tr>
+        
+        <tr>
+            <td class="text-left">31</td>
+            <td><span class="badge badge-short">SHORT</span></td>
+            <td>2026-06-05 12:40:00</td>
+            <td>2026-06-05 14:35:00</td>
+            <td>23400.90</td>
+            <td>23344.70</td>
+            <td class="text-pos">3653.00</td>
+            <td class="text-pos">0.24%</td>
+            <td>65</td>
+            <td>1.92</td>
+        </tr>
+        
+        <tr>
+            <td class="text-left">32</td>
+            <td><span class="badge badge-short">SHORT</span></td>
+            <td>2026-06-08 09:20:00</td>
+            <td>2026-06-08 12:15:00</td>
+            <td>23133.35</td>
+            <td>23213.00</td>
+            <td class="text-neg">-5177.25</td>
+            <td class="text-neg">-0.34%</td>
+            <td>65</td>
+            <td>2.92</td>
+        </tr>
+        
+        <tr>
+            <td class="text-left">33</td>
+            <td><span class="badge badge-long">LONG</span></td>
+            <td>2026-06-08 12:50:00</td>
+            <td>2026-06-08 13:05:00</td>
+            <td>23245.90</td>
+            <td>23227.30</td>
+            <td class="text-neg">-1209.00</td>
+            <td class="text-neg">-0.08%</td>
+            <td>65</td>
+            <td>0.25</td>
+        </tr>
+        
+        <tr>
+            <td class="text-left">34</td>
+            <td><span class="badge badge-short">SHORT</span></td>
+            <td>2026-06-08 13:35:00</td>
+            <td>2026-06-08 15:15:00</td>
+            <td>23196.25</td>
+            <td>23134.05</td>
+            <td class="text-pos">4043.00</td>
+            <td class="text-pos">0.27%</td>
+            <td>65</td>
+            <td>1.67</td>
+        </tr>
+        
+        <tr>
+            <td class="text-left">35</td>
+            <td><span class="badge badge-long">LONG</span></td>
+            <td>2026-06-09 09:25:00</td>
+            <td>2026-06-09 09:50:00</td>
+            <td>23237.30</td>
+            <td>23184.75</td>
+            <td class="text-neg">-3415.75</td>
+            <td class="text-neg">-0.23%</td>
+            <td>65</td>
+            <td>0.42</td>
+        </tr>
+        
+        <tr>
+            <td class="text-left">36</td>
+            <td><span class="badge badge-short">SHORT</span></td>
+            <td>2026-06-09 10:20:00</td>
+            <td>2026-06-09 11:50:00</td>
+            <td>23169.65</td>
+            <td>23174.45</td>
+            <td class="text-neg">-312.00</td>
+            <td class="text-neg">-0.02%</td>
+            <td>65</td>
+            <td>1.50</td>
+        </tr>
+        
+        <tr>
+            <td class="text-left">37</td>
+            <td><span class="badge badge-long">LONG</span></td>
+            <td>2026-06-09 12:00:00</td>
+            <td>2026-06-09 15:15:00</td>
+            <td>23181.30</td>
+            <td>23242.70</td>
+            <td class="text-pos">3991.00</td>
+            <td class="text-pos">0.26%</td>
+            <td>65</td>
+            <td>3.25</td>
+        </tr>
+        
+        <tr>
+            <td class="text-left">38</td>
+            <td><span class="badge badge-long">LONG</span></td>
+            <td>2026-06-10 09:20:00</td>
+            <td>2026-06-10 12:50:00</td>
+            <td>23326.80</td>
+            <td>23362.35</td>
+            <td class="text-pos">2310.75</td>
+            <td class="text-pos">0.15%</td>
+            <td>65</td>
+            <td>3.50</td>
+        </tr>
+        
+        <tr>
+            <td class="text-left">39</td>
+            <td><span class="badge badge-long">LONG</span></td>
+            <td>2026-06-10 13:00:00</td>
+            <td>2026-06-10 13:45:00</td>
+            <td>23380.00</td>
+            <td>23358.30</td>
+            <td class="text-neg">-1410.50</td>
+            <td class="text-neg">-0.09%</td>
+            <td>65</td>
+            <td>0.75</td>
+        </tr>
+        
+        <tr>
+            <td class="text-left">40</td>
+            <td><span class="badge badge-short">SHORT</span></td>
+            <td>2026-06-10 14:05:00</td>
+            <td>2026-06-10 15:15:00</td>
+            <td>23358.90</td>
+            <td>23200.75</td>
+            <td class="text-pos">10279.75</td>
+            <td class="text-pos">0.68%</td>
+            <td>65</td>
+            <td>1.17</td>
+        </tr>
+        
+        <tr>
+            <td class="text-left">41</td>
+            <td><span class="badge badge-short">SHORT</span></td>
+            <td>2026-06-11 09:20:00</td>
+            <td>2026-06-11 11:20:00</td>
+            <td>23115.85</td>
+            <td>23203.45</td>
+            <td class="text-neg">-5694.00</td>
+            <td class="text-neg">-0.38%</td>
+            <td>65</td>
+            <td>2.00</td>
+        </tr>
+        
+        <tr>
+            <td class="text-left">42</td>
+            <td><span class="badge badge-long">LONG</span></td>
+            <td>2026-06-11 11:20:00</td>
+            <td>2026-06-11 13:20:00</td>
+            <td>23203.45</td>
+            <td>23254.10</td>
+            <td class="text-pos">3292.25</td>
+            <td class="text-pos">0.22%</td>
+            <td>65</td>
+            <td>2.00</td>
+        </tr>
+        
+        <tr>
+            <td class="text-left">43</td>
+            <td><span class="badge badge-short">SHORT</span></td>
+            <td>2026-06-11 13:30:00</td>
+            <td>2026-06-11 15:15:00</td>
+            <td>23242.90</td>
+            <td>23165.30</td>
+            <td class="text-pos">5044.00</td>
+            <td class="text-pos">0.33%</td>
+            <td>65</td>
+            <td>1.75</td>
+        </tr>
+        
+        <tr>
+            <td class="text-left">44</td>
+            <td><span class="badge badge-long">LONG</span></td>
+            <td>2026-06-12 09:20:00</td>
+            <td>2026-06-12 12:35:00</td>
+            <td>23447.05</td>
+            <td>23351.90</td>
+            <td class="text-neg">-6184.75</td>
+            <td class="text-neg">-0.41%</td>
+            <td>65</td>
+            <td>3.25</td>
+        </tr>
+        
+        <tr>
+            <td class="text-left">45</td>
+            <td><span class="badge badge-short">SHORT</span></td>
+            <td>2026-06-12 12:40:00</td>
+            <td>2026-06-12 12:50:00</td>
+            <td>23343.75</td>
+            <td>23318.05</td>
+            <td class="text-pos">1670.50</td>
+            <td class="text-pos">0.11%</td>
+            <td>65</td>
+            <td>0.17</td>
+        </tr>
+        
+        <tr>
+            <td class="text-left">46</td>
+            <td><span class="badge badge-long">LONG</span></td>
+            <td>2026-06-12 13:35:00</td>
+            <td>2026-06-12 15:15:00</td>
+            <td>23426.70</td>
+            <td>23620.95</td>
+            <td class="text-pos">12626.25</td>
+            <td class="text-pos">0.83%</td>
+            <td>65</td>
+            <td>1.67</td>
+        </tr>
+        
+        <tr>
+            <td class="text-left">47</td>
+            <td><span class="badge badge-long">LONG</span></td>
+            <td>2026-06-15 09:20:00</td>
+            <td>2026-06-15 12:20:00</td>
+            <td>23948.15</td>
+            <td>23908.65</td>
+            <td class="text-neg">-2567.50</td>
+            <td class="text-neg">-0.16%</td>
+            <td>65</td>
+            <td>3.00</td>
+        </tr>
+        
+        <tr>
+            <td class="text-left">48</td>
+            <td><span class="badge badge-long">LONG</span></td>
+            <td>2026-06-15 14:40:00</td>
+            <td>2026-06-15 15:00:00</td>
+            <td>23934.35</td>
+            <td>23897.65</td>
+            <td class="text-neg">-2385.50</td>
+            <td class="text-neg">-0.15%</td>
+            <td>65</td>
+            <td>0.33</td>
+        </tr>
+        
+        <tr>
+            <td class="text-left">49</td>
+            <td><span class="badge badge-short">SHORT</span></td>
+            <td>2026-06-15 15:05:00</td>
+            <td>2026-06-15 15:15:00</td>
+            <td>23867.95</td>
+            <td>23845.10</td>
+            <td class="text-pos">1485.25</td>
+            <td class="text-pos">0.10%</td>
+            <td>65</td>
+            <td>0.17</td>
+        </tr>
+        
+        <tr>
+            <td class="text-left">50</td>
+            <td><span class="badge badge-long">LONG</span></td>
+            <td>2026-06-16 09:30:00</td>
+            <td>2026-06-16 11:45:00</td>
+            <td>23938.20</td>
+            <td>23924.70</td>
+            <td class="text-neg">-877.50</td>
+            <td class="text-neg">-0.06%</td>
+            <td>65</td>
+            <td>2.25</td>
+        </tr>
+        
+        <tr>
+            <td class="text-left">51</td>
+            <td><span class="badge badge-long">LONG</span></td>
+            <td>2026-06-16 13:10:00</td>
+            <td>2026-06-16 15:15:00</td>
+            <td>23938.80</td>
+            <td>23987.75</td>
+            <td class="text-pos">3181.75</td>
+            <td class="text-pos">0.20%</td>
+            <td>65</td>
+            <td>2.08</td>
+        </tr>
+        
+        <tr>
+            <td class="text-left">52</td>
+            <td><span class="badge badge-long">LONG</span></td>
+            <td>2026-06-17 09:20:00</td>
+            <td>2026-06-17 12:15:00</td>
+            <td>23982.30</td>
+            <td>24051.75</td>
+            <td class="text-pos">4514.25</td>
+            <td class="text-pos">0.29%</td>
+            <td>65</td>
+            <td>2.92</td>
+        </tr>
+        
+        <tr>
+            <td class="text-left">53</td>
+            <td><span class="badge badge-short">SHORT</span></td>
+            <td>2026-06-17 12:50:00</td>
+            <td>2026-06-17 13:20:00</td>
+            <td>24046.15</td>
+            <td>24026.00</td>
+            <td class="text-pos">1309.75</td>
+            <td class="text-pos">0.08%</td>
+            <td>65</td>
+            <td>0.50</td>
+        </tr>
+        
+        <tr>
+            <td class="text-left">54</td>
+            <td><span class="badge badge-long">LONG</span></td>
+            <td>2026-06-17 14:00:00</td>
+            <td>2026-06-17 14:20:00</td>
+            <td>24049.85</td>
+            <td>24050.65</td>
+            <td class="text-pos">52.00</td>
+            <td class="">0.00%</td>
+            <td>65</td>
+            <td>0.33</td>
+        </tr>
+        
+        <tr>
+            <td class="text-left">55</td>
+            <td><span class="badge badge-short">SHORT</span></td>
+            <td>2026-06-17 14:30:00</td>
+            <td>2026-06-17 14:35:00</td>
+            <td>24025.80</td>
+            <td>24029.70</td>
+            <td class="text-neg">-253.50</td>
+            <td class="text-neg">-0.02%</td>
+            <td>65</td>
+            <td>0.08</td>
+        </tr>
+        
+        <tr>
+            <td class="text-left">56</td>
+            <td><span class="badge badge-long">LONG</span></td>
+            <td>2026-06-17 15:00:00</td>
+            <td>2026-06-17 15:15:00</td>
+            <td>24076.80</td>
+            <td>24084.25</td>
+            <td class="text-pos">484.25</td>
+            <td class="text-pos">0.03%</td>
+            <td>65</td>
+            <td>0.25</td>
+        </tr>
+        
+        <tr>
+            <td class="text-left">57</td>
+            <td><span class="badge badge-long">LONG</span></td>
+            <td>2026-06-18 09:20:00</td>
+            <td>2026-06-18 10:50:00</td>
+            <td>24085.10</td>
+            <td>24076.55</td>
+            <td class="text-neg">-555.75</td>
+            <td class="text-neg">-0.04%</td>
+            <td>65</td>
+            <td>1.50</td>
+        </tr>
+        
+        <tr>
+            <td class="text-left">58</td>
+            <td><span class="badge badge-short">SHORT</span></td>
+            <td>2026-06-18 11:05:00</td>
+            <td>2026-06-18 11:50:00</td>
+            <td>24085.10</td>
+            <td>24065.60</td>
+            <td class="text-pos">1267.50</td>
+            <td class="text-pos">0.08%</td>
+            <td>65</td>
+            <td>0.75</td>
+        </tr>
+        
+        <tr>
+            <td class="text-left">59</td>
+            <td><span class="badge badge-long">LONG</span></td>
+            <td>2026-06-18 12:15:00</td>
+            <td>2026-06-18 14:15:00</td>
+            <td>24089.85</td>
+            <td>24100.80</td>
+            <td class="text-pos">711.75</td>
+            <td class="text-pos">0.05%</td>
+            <td>65</td>
+            <td>2.00</td>
+        </tr>
+        
+        <tr>
+            <td class="text-left">60</td>
+            <td><span class="badge badge-short">SHORT</span></td>
+            <td>2026-06-18 14:20:00</td>
+            <td>2026-06-18 14:35:00</td>
+            <td>24089.60</td>
+            <td>24098.30</td>
+            <td class="text-neg">-565.50</td>
+            <td class="text-neg">-0.04%</td>
+            <td>65</td>
+            <td>0.25</td>
+        </tr>
+        
+        <tr>
+            <td class="text-left">61</td>
+            <td><span class="badge badge-long">LONG</span></td>
+            <td>2026-06-18 15:05:00</td>
+            <td>2026-06-18 15:15:00</td>
+            <td>24150.85</td>
+            <td>24177.80</td>
+            <td class="text-pos">1751.75</td>
+            <td class="text-pos">0.11%</td>
+            <td>65</td>
+            <td>0.17</td>
+        </tr>
+        
+        <tr>
+            <td class="text-left">62</td>
+            <td><span class="badge badge-short">SHORT</span></td>
+            <td>2026-06-19 09:25:00</td>
+            <td>2026-06-19 14:00:00</td>
+            <td>23963.75</td>
+            <td>23966.65</td>
+            <td class="text-neg">-188.50</td>
+            <td class="text-neg">-0.01%</td>
+            <td>65</td>
+            <td>4.58</td>
+        </tr>
+        
+        <tr>
+            <td class="text-left">63</td>
+            <td><span class="badge badge-long">LONG</span></td>
+            <td>2026-06-19 14:05:00</td>
+            <td>2026-06-19 14:20:00</td>
+            <td>23977.85</td>
+            <td>23997.60</td>
+            <td class="text-pos">1283.75</td>
+            <td class="text-pos">0.08%</td>
+            <td>65</td>
+            <td>0.25</td>
+        </tr>
+        
+        <tr>
+            <td class="text-left">64</td>
+            <td><span class="badge badge-short">SHORT</span></td>
+            <td>2026-06-19 15:00:00</td>
+            <td>2026-06-19 15:05:00</td>
+            <td>23910.50</td>
+            <td>24005.65</td>
+            <td class="text-neg">-6184.75</td>
+            <td class="text-neg">-0.40%</td>
+            <td>65</td>
+            <td>0.08</td>
+        </tr>
+        
+        <tr>
+            <td class="text-left">65</td>
+            <td><span class="badge badge-long">LONG</span></td>
+            <td>2026-06-19 15:05:00</td>
+            <td>2026-06-19 15:15:00</td>
+            <td>24005.65</td>
+            <td>24025.80</td>
+            <td class="text-pos">1309.75</td>
+            <td class="text-pos">0.08%</td>
+            <td>65</td>
+            <td>0.17</td>
+        </tr>
+        
+        <tr>
+            <td class="text-left">66</td>
+            <td><span class="badge badge-long">LONG</span></td>
+            <td>2026-06-22 09:20:00</td>
+            <td>2026-06-22 12:15:00</td>
+            <td>24121.35</td>
+            <td>24117.65</td>
+            <td class="text-neg">-240.50</td>
+            <td class="text-neg">-0.02%</td>
+            <td>65</td>
+            <td>2.92</td>
+        </tr>
+        
+        <tr>
+            <td class="text-left">67</td>
+            <td><span class="badge badge-long">LONG</span></td>
+            <td>2026-06-22 14:30:00</td>
+            <td>2026-06-22 15:05:00</td>
+            <td>24138.70</td>
+            <td>24117.80</td>
+            <td class="text-neg">-1358.50</td>
+            <td class="text-neg">-0.09%</td>
+            <td>65</td>
+            <td>0.58</td>
+        </tr>
+        
+        <tr>
+            <td class="text-left">68</td>
+            <td><span class="badge badge-short">SHORT</span></td>
+            <td>2026-06-22 15:10:00</td>
+            <td>2026-06-22 15:15:00</td>
+            <td>24104.95</td>
+            <td>24105.50</td>
+            <td class="text-neg">-35.75</td>
+            <td class="">-0.00%</td>
+            <td>65</td>
+            <td>0.08</td>
+        </tr>
+        
+            </tbody>
+        </table>
+    </div>
+    
+                </div>
+                
+            </main>
+        </div>
+
+        <script>
+            function showTab(tabId, element) {
+                // Update Sidebar
+                const navItems = document.querySelectorAll('.nav-item');
+                navItems.forEach(item => item.classList.remove('active'));
+                element.classList.add('active');
+
+                // Update Content
+                const contents = document.querySelectorAll('.tab-content');
+                contents.forEach(content => content.classList.remove('active'));
+                document.getElementById(tabId).classList.add('active');
+                
+                // Update Title
+                const titleMap = {
+                    'dashboard': 'Performance',
+                    'risk': 'Risk Analysis',
+                    'log': 'Trade Log'
+                };
+                
+                const titleEl = document.getElementById('page-title');
+                titleEl.style.opacity = '0';
+                titleEl.style.transform = 'translateY(-10px)';
+                
+                setTimeout(() => {
+                    titleEl.innerText = titleMap[tabId];
+                    titleEl.style.opacity = '1';
+                    titleEl.style.transform = 'translateY(0)';
+                }, 200);
+            }
+            
+            function switchView(sectionId, viewType, btn) {
+                // Toggle Content
+                document.getElementById(sectionId + '-table').classList.remove('active');
+                document.getElementById(sectionId + '-bar').classList.remove('active');
+                document.getElementById(sectionId + '-' + viewType).classList.add('active');
+                
+                // Toggle Buttons
+                const parent = btn.parentElement;
+                parent.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            }
+
+            // Chart Initialization
+            document.addEventListener('DOMContentLoaded', function() {
+                const ctx = document.getElementById('performanceChart').getContext('2d');
+                const ctxDaily = document.getElementById('dailyPnLChart').getContext('2d');
+                const dates = ["2026-05-25", "2026-05-26", "2026-05-27", "2026-05-29", "2026-06-01", "2026-06-02", "2026-06-03", "2026-06-04", "2026-06-05", "2026-06-08", "2026-06-09", "2026-06-10", "2026-06-11", "2026-06-12", "2026-06-15", "2026-06-16", "2026-06-17", "2026-06-18", "2026-06-19", "2026-06-22"];
+                const equity = [1959.7500000000946, 12236.250000000236, 12964.250000000284, 37339.250000000284, 51460.500000000284, 54723.500000000335, 60411.00000000057, 55035.500000000284, 50550.500000000284, 48207.250000000095, 48470.500000000284, 59650.500000000284, 62292.750000000146, 70404.75000000033, 66937.00000000067, 69241.25000000071, 75348.00000000099, 77957.75000000108, 74178.00000000074, 72543.25000000089];
+                const dailyPnL = [1959.7500000000946, 10276.500000000142, 728.0000000000473, 24375.0, 14121.25, 3263.0000000000473, 5687.5000000002365, -5375.500000000284, -4485.0, -2343.250000000189, 263.2500000001892, 11180.0, 2642.249999999858, 8112.000000000189, -3467.749999999669, 2304.2500000000473, 6106.750000000284, 2609.7500000000946, -3779.750000000331, -1634.7499999998581];
+                const drawdown = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -5375.500000000284, -9860.500000000284, -12203.750000000473, -11940.500000000284, -760.5000000002838, 0.0, 0.0, -3467.7499999996653, -1163.4999999996217, 0.0, 0.0, -3779.7500000003347, -5414.500000000189];
+                const breakdowns = {"monthly": {"2026": {"1": {"pnl": 0.0, "dd": 0.0}, "2": {"pnl": 0.0, "dd": 0.0}, "3": {"pnl": 0.0, "dd": 0.0}, "4": {"pnl": 0.0, "dd": 0.0}, "5": {"pnl": 37339.250000000284, "dd": -1595.7499999999527}, "6": {"pnl": 35204.00000000061, "dd": -16773.250000000426}, "7": {"pnl": 0.0, "dd": 0.0}, "8": {"pnl": 0.0, "dd": 0.0}, "9": {"pnl": 0.0, "dd": 0.0}, "10": {"pnl": 0.0, "dd": 0.0}, "11": {"pnl": 0.0, "dd": 0.0}, "12": {"pnl": 0.0, "dd": 0.0}, "Total": {"pnl": 72543.25000000089, "dd": -16773.250000000415}}}, "weekly": {"2026": {"0": {"pnl": 8635.250000000378, "dd": -7445.749999999716}, "1": {"pnl": 16107.000000000426, "dd": -3727.7499999999054}, "2": {"pnl": 23702.250000000568, "dd": -1602.2499999998581}, "3": {"pnl": -123.50000000033106, "dd": -11596.000000000331}, "4": {"pnl": 24222.249999999858, "dd": -10669.749999999858}, "Total": {"pnl": 72543.25000000089, "dd": -16773.250000000415}}}};
+                const dailyWins = [1, 2, 3, 2, 2, 2, 2, 3, 3, 1, 1, 2, 2, 2, 1, 1, 4, 3, 2, 0];
+                const dailyLosses = [-2, 0, -1, 0, 0, -1, -1, -3, -3, -2, -2, -1, -1, -1, -2, -1, -1, -2, -2, -3];
+                
+                // Performance Chart
+                if (dates.length > 0) {
+                    new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: dates,
+                            datasets: [
+                                {
+                                    label: 'Cumulative PnL',
+                                    data: equity,
+                                    borderColor: '#3fb950',
+                                    backgroundColor: 'rgba(63, 185, 80, 0.1)',
+                                    borderWidth: 2,
+                                    tension: 0.1,
+                                    fill: true,
+                                    yAxisID: 'y'
+                                },
+                                {
+                                    label: 'Drawdown',
+                                    data: drawdown,
+                                    borderColor: '#f85149',
+                                    backgroundColor: 'rgba(248, 81, 73, 0.1)',
+                                    borderWidth: 1,
+                                    tension: 0.1,
+                                    fill: true,
+                                    yAxisID: 'y1'
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            interaction: {
+                                mode: 'index',
+                                intersect: false,
+                            },
+                            scales: {
+                                x: {
+                                    grid: { color: '#30363d' },
+                                    ticks: { color: '#8b949e' }
+                                },
+                                y: {
+                                    type: 'linear',
+                                    display: true,
+                                    position: 'left',
+                                    grid: { color: '#30363d' },
+                                    ticks: { color: '#8b949e' },
+                                    title: { display: true, text: 'PnL', color: '#8b949e' }
+                                },
+                                y1: {
+                                    type: 'linear',
+                                    display: true,
+                                    position: 'right',
+                                    grid: { drawOnChartArea: false },
+                                    ticks: { color: '#8b949e' },
+                                    title: { display: true, text: 'Drawdown', color: '#8b949e' }
+                                }
+                            },
+                            plugins: {
+                                legend: { labels: { color: '#e6edf3' } },
+                                tooltip: { mode: 'index', intersect: false }
+                            }
+                        }
+                    });
+
+                    // Daily PnL Chart
+                    const bgColors = dailyPnL.map(v => v >= 0 ? '#3fb950' : '#f85149');
+                    new Chart(ctxDaily, {
+                        type: 'bar',
+                        data: {
+                            labels: dates,
+                            datasets: [
+                                {
+                                    label: 'Daily PnL',
+                                    data: dailyPnL,
+                                    backgroundColor: bgColors,
+                                    borderRadius: 2
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                x: {
+                                    grid: { display: false },
+                                    ticks: { maxTicksLimit: 20, color: '#8b949e' }
+                                },
+                                y: {
+                                    grid: { color: '#30363d' },
+                                    ticks: { color: '#8b949e' }
+                                }
+                            },
+                            plugins: {
+                                legend: { display: false },
+                                title: { display: true, text: 'Daily Profit & Loss', color: '#e6edf3', font: { size: 14, weight: 'normal' } }
+                            }
+                        }
+                    });
+
+                    // Trade Count Chart
+                    const ctxCount = document.getElementById('tradeCountChart').getContext('2d');
+                    new Chart(ctxCount, {
+                        type: 'bar',
+                        data: {
+                            labels: dates,
+                            datasets: [
+                                {
+                                    label: 'Winning Trades',
+                                    data: dailyWins,
+                                    backgroundColor: '#3fb950',
+                                    stack: 'Stack 0'
+                                },
+                                {
+                                    label: 'Losing Trades',
+                                    data: dailyLosses,
+                                    backgroundColor: '#f85149',
+                                    stack: 'Stack 0'
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                x: {
+                                    stacked: true,
+                                    grid: { display: false },
+                                    ticks: { maxTicksLimit: 20, color: '#8b949e' }
+                                },
+                                y: {
+                                    stacked: true,
+                                    grid: { color: '#30363d' },
+                                    ticks: { 
+                                        color: '#8b949e', 
+                                        stepSize: 1,
+                                        callback: function(value) { return Math.abs(value); }
+                                    },
+                                    title: { display: true, text: 'Trade Count', color: '#8b949e' }
+                                }
+                            },
+                            plugins: {
+                                legend: { labels: { color: '#e6edf3' } },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            let label = context.dataset.label || '';
+                                            if (label) {
+                                                label += ': ';
+                                            }
+                                            if (context.parsed.y !== null) {
+                                                label += Math.abs(context.parsed.y);
+                                            }
+                                            return label;
+                                        }
+                                    }
+                                },
+                                title: { display: true, text: 'Daily Trade Frequency (Win vs Loss)', color: '#e6edf3', font: { size: 14, weight: 'normal' } }
+                            }
+                        }
+                    });
+                }
+                
+                // Helper to render Breakdown Chart
+                function renderBreakdownChart(canvasId, data, labelsMap, title) {
+                    if (!data || Object.keys(data).length === 0) return;
+                    
+                    const ctxB = document.getElementById(canvasId).getContext('2d');
+                    const years = Object.keys(data).sort();
+                    const datasets = [];
+                    const colors = ['#2f81f7', '#3fb950', '#a371f7', '#f1e05a', '#f85149', '#d29922', '#db6d28'];
+                    
+                    years.forEach((year, index) => {
+                        const yearData = [];
+                        // Iterate through labelsMap keys (1..12 or 0..4)
+                        for (let i = 0; i < labelsMap.length; i++) {
+                            const key = labelsMap[i].key; 
+                            const cell = data[year][key];
+                            // Handle both old (number) and new (object) format
+                            let val = 0;
+                            if (typeof cell === 'number') {
+                                val = cell;
+                            } else if (cell && typeof cell === 'object') {
+                                val = cell.pnl || 0;
+                            }
+                            yearData.push(val);
+                        }
+                        
+                        datasets.push({
+                            label: year,
+                            data: yearData,
+                            backgroundColor: colors[index % colors.length],
+                            borderWidth: 0,
+                            barPercentage: 0.6,
+                            categoryPercentage: 0.8
+                        });
+                    });
+                    
+                    new Chart(ctxB, {
+                        type: 'bar',
+                        data: {
+                            labels: labelsMap.map(x => x.label),
+                            datasets: datasets
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                x: { 
+                                    grid: { display: false },
+                                    ticks: { color: '#8b949e' }
+                                },
+                                y: {
+                                    grid: { color: '#30363d' },
+                                    ticks: { color: '#8b949e' }
+                                }
+                            },
+                            plugins: {
+                                legend: { labels: { color: '#e6edf3' } },
+                                title: { display: false }
+                            }
+                        }
+                    });
+                }
+                
+                if (breakdowns.monthly) {
+                   const mLabels = [
+                       {key: '1', label: 'Jan'}, {key: '2', label: 'Feb'}, {key: '3', label: 'Mar'}, 
+                       {key: '4', label: 'Apr'}, {key: '5', label: 'May'}, {key: '6', label: 'Jun'},
+                       {key: '7', label: 'Jul'}, {key: '8', label: 'Aug'}, {key: '9', label: 'Sep'}, 
+                       {key: '10', label: 'Oct'}, {key: '11', label: 'Nov'}, {key: '12', label: 'Dec'}
+                   ];
+                   renderBreakdownChart('monthlyChart', breakdowns.monthly, mLabels, 'Monthly PnL');
+                }
+                
+                if (breakdowns.weekly) {
+                   const wLabels = [
+                       {key: '0', label: 'Mon'}, {key: '1', label: 'Tue'}, {key: '2', label: 'Wed'}, 
+                       {key: '3', label: 'Thu'}, {key: '4', label: 'Fri'}
+                   ];
+                   renderBreakdownChart('weeklyChart', breakdowns.weekly, wLabels, 'Weekly PnL');
+                }
+            });
+        </script>
+    </body>
+    </html>
+    

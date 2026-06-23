@@ -1,0 +1,19 @@
+.idea/
+.vscode/
+__pycache__/
+AllFiles/
+build/
+dist/
+Candle Data/
+exe backup/
+icons1/
+logs/
+output/
+data/*
+!data/sample_NIFTY.feather
+!data/README.md
+venv/
+*.whl
+*.stackdump
+.claude/settings.local.json
+mt_quant_system/data/
