@@ -1,0 +1,2 @@
+attempt_id,strategy_name,timeframes_used,indicators_used,entry_long,entry_short,exit_long,exit_short,total_trades,win_rate_pct,trades_per_year,total_pnl,highest_mdd,sharpe_ratio,pass_fail,fail_reason
+001,SupertrendMtf,5m+15m,Supertrend(10/3.0),5m ST up & 15m ST up,5m ST down & 15m ST down,timeframes disagree,timeframes disagree,37,54.05,370,39484.25,-18577.0,4.09,PASS,positive PnL
