@@ -129,3 +129,7 @@ mt_quant_system/      core engine, GUI, strategies
 data/                 .feather data (sample included)
 output/               generated CSV/HTML (git-ignored)
 ```
+
+## License
+
+MIT — see [LICENSE](LICENSE).
